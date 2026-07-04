@@ -42,6 +42,10 @@ uploads/
 **/uploads/
 *.pdf
 
+# --- Dedup tracking (runtime data, not source) ---
+seen_hashes.txt
+**/seen_hashes.txt
+
 # --- Docker ---
 *.pid
 
