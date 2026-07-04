@@ -1,0 +1,7 @@
+# Don't copy these into the image — they're local runtime data/test
+# files, not source, and would bloat or pollute the build.
+chroma_data/
+seen_hashes.txt
+*.pdf
+__pycache__/
+*.pyc

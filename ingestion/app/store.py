@@ -1,4 +1,5 @@
 import chromadb
+from chromadb.config import Settings
 
 # Where ChromaDB writes its files to disk. Step 8 will bind-mount this
 # folder as a Docker volume so it survives container restarts.
@@ -6,9 +7,14 @@ CHROMA_PATH = "chroma_data"
 
 
 def get_collection():
-    # PersistentClient saves everything to CHROMA_PATH instead of only
-    # keeping it in memory, so data survives between runs.
-    client = chromadb.PersistentClient(path=CHROMA_PATH)
+    # anonymized_telemetry=False: ChromaDB otherwise sends anonymous
+    # usage events to PostHog (an external service) by default. This
+    # project is 100% local with zero cloud dependencies, so that must
+    # be explicitly turned off rather than left on by accident.
+    client = chromadb.PersistentClient(
+        path=CHROMA_PATH,
+        settings=Settings(anonymized_telemetry=False),
+    )
     # get_or_create means this is safe to call every time — it won't
     # error out just because the collection already exists from a
     # previous run.
