@@ -1,0 +1,61 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.Python
+build/
+dist/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Testing / coverage ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# --- Type checkers / linters ---
+.mypy_cache/
+.ruff_cache/
+.pytype/
+
+# --- Vector DB / persisted data (bind-mounted volumes, never commit data) ---
+chroma_data/
+**/chroma_data/
+*.sqlite3
+*.duckdb
+
+# --- Uploaded / ingested source documents ---
+uploads/
+**/uploads/
+*.pdf
+
+# --- Docker ---
+*.pid
+
+# --- IDE / editor ---
+.vscode/
+.idea/
+*.swp
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+logs/
+CLAUDE.md
+PLAN_CHECKLIST.md
