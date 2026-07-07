@@ -12,6 +12,11 @@ class ChatRequest(BaseModel):
     query: str
 
 
+@app.get("/history")
+def history_endpoint():
+    return load_history()
+
+
 @app.post("/chat")
 def chat_endpoint(request: ChatRequest):
     history = load_history()

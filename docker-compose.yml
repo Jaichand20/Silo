@@ -30,3 +30,14 @@ services:
       - chroma
     ports:
       - "8002:8000"
+
+  ui:
+    build: ./ui
+    environment:
+      INGESTION_URL: http://ingestion:8000
+      CHAT_URL: http://chat:8000
+    depends_on:
+      - ingestion
+      - chat
+    ports:
+      - "8501:8501"

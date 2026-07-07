@@ -22,10 +22,11 @@ Clone the repo, then from the project root:
 docker compose up --build -d
 ```
 
-This builds and starts three containers:
+This builds and starts four containers:
 
 | Service | Purpose | Host port |
 |---|---|---|
+| `ui` | Streamlit interface (upload + chat) | `8501` |
 | `ingestion` | PDF upload + processing (`POST /ingest`) | `8001` |
 | `chat` | Retrieval + LLM chat (`POST /chat`) | `8002` |
 | `chroma` | Vector database | not exposed to host |
@@ -34,7 +35,11 @@ The `ingestion` and `chat` containers reach Ollama on your host via `http://host
 
 ## Usage
 
-**Upload a document:**
+Open **http://localhost:8501** in your browser. Upload a PDF, then ask questions about it in the chat box — answers stream in live and are grounded only in what you've uploaded. Conversation history persists across page reloads and a sliding window of recent turns is replayed to the model each time, so context never grows unbounded.
+
+### Advanced: raw REST API
+
+The UI is just a client of the ingestion and chat services — you can call them directly instead:
 
 ```
 curl.exe -F "file=@C:/path/to/your.pdf" http://localhost:8001/ingest
@@ -42,15 +47,11 @@ curl.exe -F "file=@C:/path/to/your.pdf" http://localhost:8001/ingest
 
 Returns `{"filename": ..., "status": "stored" | "duplicate", "chunks_stored": N}`. Re-uploading the same file is a no-op (deduplicated by content hash).
 
-**Ask a question:**
-
 ```powershell
 Invoke-RestMethod -Uri http://localhost:8002/chat -Method Post -ContentType "application/json" -Body '{"query": "your question here"}'
 ```
 
 (In bash/Git Bash, use `curl -N -X POST http://localhost:8002/chat -H "Content-Type: application/json" -d '{"query": "your question here"}'` instead — PowerShell's native argument passing to `curl.exe` mangles embedded quotes, so `Invoke-RestMethod` is the reliable option there.)
-
-Returns a plain-text answer grounded only in your uploaded documents. Conversation history persists across requests (in `chat/app/chat_history.json`) and a sliding window of recent turns is replayed to the model each time, so context never grows unbounded.
 
 ## Stopping / resetting
 
@@ -66,7 +67,8 @@ Stops and removes all containers. Your uploaded vectors are safe — ChromaDB's 
 ingestion/   PDF extraction, chunking, embedding, storage (Steps 1-3, 6)
 chat/        Retrieval, context injection, LLM chat (Steps 4-6)
 chroma/      Standalone ChromaDB server (official image, Step 7)
-docker-compose.yml   Links all three services (Steps 7-8)
+ui/          Streamlit interface (Step 9)
+docker-compose.yml   Links all four services (Steps 7-9)
 ```
 
-See `ingestion/README.md` and `chat/README.md` for service-specific details.
+See `ingestion/README.md`, `chat/README.md`, and `ui/README.md` for service-specific details.
