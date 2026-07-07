@@ -13,8 +13,14 @@ MODEL = "gemma4"
 
 def ask(query, history):
     # history here is the conversation SO FAR, not yet including this new
-    # question — the caller adds both the question and the reply after
-    # this function returns (see the __main__ loop below).
+    # question — the caller adds both the question and the reply to
+    # history once this generator is fully drained (see the __main__ loop
+    # below, or chat/app/main.py for the REST version).
+    #
+    # This is a generator (uses `yield`, not `return`) so callers can
+    # print/stream each token as it arrives, instead of waiting for the
+    # whole reply. That's what lets both the CLI and the FastAPI endpoint
+    # in Step 6 share this exact function.
     chunks = retrieve_top_chunks(query)
     system_prompt = build_system_prompt(chunks)
 
@@ -35,19 +41,13 @@ def ask(query, history):
     )
     response.raise_for_status()
 
-    full_reply = ""
     for line in response.iter_lines():
         if not line:
             continue
         piece = json.loads(line)
-        token = piece["message"]["content"]
-        print(token, end="", flush=True)
-        full_reply += token
+        yield piece["message"]["content"]
         if piece.get("done"):
             break
-    print()
-
-    return full_reply
 
 
 if __name__ == "__main__":
@@ -66,7 +66,12 @@ if __name__ == "__main__":
             break
 
         print("Assistant: ", end="")
-        reply = ask(query, history)
+        tokens = []
+        for token in ask(query, history):
+            print(token, end="", flush=True)
+            tokens.append(token)
+        print()
+        reply = "".join(tokens)
 
         # Only now — after the reply is complete — do we record this turn
         # in the permanent history and save it to disk.

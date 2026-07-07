@@ -59,7 +59,7 @@ def process_document(pdf_path):
     doc_hash = hash_file(pdf_path)
     if is_duplicate(doc_hash):
         print("Already ingested, skipping.")
-        return
+        return {"status": "duplicate", "chunks_stored": 0}
 
     text = extract_text_from_pdf(pdf_path)
     chunks = chunk_text(text)
@@ -69,6 +69,7 @@ def process_document(pdf_path):
     mark_as_seen(doc_hash)
 
     print(f"Stored {len(chunks)} chunks from {pdf_path}.")
+    return {"status": "stored", "chunks_stored": len(chunks)}
 
 
 if __name__ == "__main__":
