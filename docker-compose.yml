@@ -17,6 +17,10 @@ services:
       - chroma
     ports:
       - "8001:8000"
+    volumes:
+      - ./seen_hashes:/app/seen_hashes
+      - ./uploads:/app/uploads
+      - ./documents:/app/documents
 
   chat:
     build: ./chat
@@ -30,6 +34,8 @@ services:
       - chroma
     ports:
       - "8002:8000"
+    volumes:
+      - ./chat_histories:/app/chat_histories
 
   ui:
     build: ./ui

@@ -11,8 +11,8 @@ OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 MODEL = "gemma4"
 
 
-def ask(query, history):
-    chunks = retrieve_top_chunks(query)
+def ask(query, history, chat_id):
+    chunks = retrieve_top_chunks(query, chat_id)
     system_prompt = build_system_prompt(chunks)
 
     messages = [{"role": "system", "content": system_prompt}]
@@ -40,6 +40,7 @@ if __name__ == "__main__":
 
     sys.stdout.reconfigure(encoding="utf-8")
 
+    chat_id = sys.argv[1]
     history = load_history()
 
     print("Silo chat. Type 'exit' to quit.")
@@ -50,7 +51,7 @@ if __name__ == "__main__":
 
         print("Assistant: ", end="")
         tokens = []
-        for token in ask(query, history):
+        for token in ask(query, history, chat_id):
             print(token, end="", flush=True)
             tokens.append(token)
         print()

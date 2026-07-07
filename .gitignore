@@ -45,10 +45,18 @@ uploads/
 # --- Dedup tracking (runtime data, not source) ---
 seen_hashes.txt
 **/seen_hashes.txt
+seen_hashes/
+**/seen_hashes/
 
 # --- Chat conversation history (runtime data, not source) ---
 chat_history.json
 **/chat_history.json
+chat_histories/
+**/chat_histories/
+
+# --- Per-chat document registry (runtime data, not source) ---
+documents/
+**/documents/
 
 # --- Docker ---
 *.pid

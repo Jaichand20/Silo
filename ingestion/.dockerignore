@@ -1,5 +1,7 @@
 **/seen_hashes.txt
+**/seen_hashes/
 **/uploads/
+**/documents/
 **/*.pdf
 **/__pycache__/
 **/*.pyc

@@ -2,8 +2,13 @@ import json
 import os
 
 HISTORY_PATH = "chat_history.json"
+HISTORY_DIR = "chat_histories"
 
 MAX_MESSAGES = 6
+
+
+def history_path(chat_id):
+    return f"{HISTORY_DIR}/{chat_id}.json"
 
 
 def load_history(path=HISTORY_PATH):
@@ -14,6 +19,9 @@ def load_history(path=HISTORY_PATH):
 
 
 def save_history(history, path=HISTORY_PATH):
+    parent_dir = os.path.dirname(path)
+    if parent_dir:
+        os.makedirs(parent_dir, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2)
 

@@ -18,18 +18,18 @@ def embed_query(text, model="nomic-embed-text"):
     return response.json()["embedding"]
 
 
-def get_collection():
+def get_collection(chat_id):
     client = chromadb.HttpClient(
         host=CHROMA_HOST,
         port=CHROMA_PORT,
         settings=Settings(anonymized_telemetry=False),
     )
-    return client.get_or_create_collection("documents")
+    return client.get_or_create_collection(f"chat_{chat_id}")
 
 
-def retrieve_top_chunks(query, top_k=3):
+def retrieve_top_chunks(query, chat_id, top_k=3):
     query_vector = embed_query(query)
-    collection = get_collection()
+    collection = get_collection(chat_id)
 
     results = collection.query(query_embeddings=[query_vector], n_results=top_k)
     return results["documents"][0]
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
 
     query = sys.argv[1]
-    chunks = retrieve_top_chunks(query)
+    chunks = retrieve_top_chunks(query, sys.argv[2])
 
     for i, chunk in enumerate(chunks, start=1):
         print(f"--- chunk {i} ---")
