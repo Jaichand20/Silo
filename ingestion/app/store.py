@@ -3,43 +3,25 @@ import os
 import chromadb
 from chromadb.config import Settings
 
-# Where ChromaDB writes its files to disk. This must be the SAME path
-# the chat service uses (see chat/app/retrieve.py) — they're two
-# separate services that both need to see the same stored data.
-# Default: a shared folder at the project root, not inside either
-# service's own directory. Step 7's docker-compose will override this
-# via env var to a shared container path instead.
 CHROMA_PATH = os.environ.get("CHROMA_PATH", "../../chroma_data")
 
 
 def get_collection():
-    # anonymized_telemetry=False: ChromaDB otherwise sends anonymous
-    # usage events to PostHog (an external service) by default. This
-    # project is 100% local with zero cloud dependencies, so that must
-    # be explicitly turned off rather than left on by accident.
     client = chromadb.PersistentClient(
         path=CHROMA_PATH,
         settings=Settings(anonymized_telemetry=False),
     )
-    # get_or_create means this is safe to call every time — it won't
-    # error out just because the collection already exists from a
-    # previous run.
     return client.get_or_create_collection("documents")
 
 
 def store_chunks(chunks, embeddings, doc_hash, source_path):
     collection = get_collection()
 
-    # Chunk IDs are built from the document hash + position, so the same
-    # document always produces the same IDs — re-storing overwrites the
-    # same rows instead of creating duplicates.
     ids = [f"{doc_hash}_{i}" for i in range(len(chunks))]
     metadatas = [
         {"source": source_path, "chunk_index": i} for i in range(len(chunks))
     ]
 
-    # upsert = "insert or update": if an ID already exists it gets
-    # overwritten instead of raising an error, which add() would do.
     collection.upsert(
         ids=ids,
         embeddings=embeddings,
@@ -49,8 +31,6 @@ def store_chunks(chunks, embeddings, doc_hash, source_path):
 
 
 def process_document(pdf_path):
-    # Imported here (not at the top) since these are our own Step 1/2
-    # modules, kept next to this file rather than installed packages.
     from dedupe import hash_file, is_duplicate, mark_as_seen
     from extract import extract_text_from_pdf
     from chunk import chunk_text
