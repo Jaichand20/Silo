@@ -1,9 +1,15 @@
+import os
+
 import chromadb
 from chromadb.config import Settings
 
-# Where ChromaDB writes its files to disk. Step 8 will bind-mount this
-# folder as a Docker volume so it survives container restarts.
-CHROMA_PATH = "chroma_data"
+# Where ChromaDB writes its files to disk. This must be the SAME path
+# the chat service uses (see chat/app/retrieve.py) — they're two
+# separate services that both need to see the same stored data.
+# Default: a shared folder at the project root, not inside either
+# service's own directory. Step 7's docker-compose will override this
+# via env var to a shared container path instead.
+CHROMA_PATH = os.environ.get("CHROMA_PATH", "../../chroma_data")
 
 
 def get_collection():
