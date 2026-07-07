@@ -5,7 +5,8 @@ import requests
 from chromadb.config import Settings
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-CHROMA_PATH = os.environ.get("CHROMA_PATH", "../../chroma_data")
+CHROMA_HOST = os.environ.get("CHROMA_HOST", "localhost")
+CHROMA_PORT = int(os.environ.get("CHROMA_PORT", "8000"))
 
 
 def embed_query(text, model="nomic-embed-text"):
@@ -18,8 +19,9 @@ def embed_query(text, model="nomic-embed-text"):
 
 
 def get_collection():
-    client = chromadb.PersistentClient(
-        path=CHROMA_PATH,
+    client = chromadb.HttpClient(
+        host=CHROMA_HOST,
+        port=CHROMA_PORT,
         settings=Settings(anonymized_telemetry=False),
     )
     return client.get_or_create_collection("documents")

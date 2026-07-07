@@ -1,0 +1,30 @@
+services:
+  chroma:
+    image: chromadb/chroma:0.5.23
+    restart: unless-stopped
+
+  ingestion:
+    build: ./ingestion
+    environment:
+      OLLAMA_URL: http://host.docker.internal:11434
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    depends_on:
+      - chroma
+    ports:
+      - "8001:8000"
+
+  chat:
+    build: ./chat
+    environment:
+      OLLAMA_URL: http://host.docker.internal:11434
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    depends_on:
+      - chroma
+    ports:
+      - "8002:8000"
