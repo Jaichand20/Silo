@@ -46,6 +46,10 @@ uploads/
 seen_hashes.txt
 **/seen_hashes.txt
 
+# --- Chat conversation history (runtime data, not source) ---
+chat_history.json
+**/chat_history.json
+
 # --- Docker ---
 *.pid
 
