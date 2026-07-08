@@ -7,7 +7,13 @@ const state = {
     history: [],
     documents: [],
     pendingDeleteChatId: null,
+    streaming: {},
 };
+
+function updateSendButton() {
+    const sendBtn = document.getElementById("send-btn");
+    if (sendBtn) sendBtn.disabled = !!state.streaming[state.currentChatId];
+}
 
 function genChatId() {
     return crypto.randomUUID().replace(/-/g, "").slice(0, 8);
@@ -154,11 +160,15 @@ function escapeHtml(str) {
 async function switchChat(chatId) {
     if (chatId === state.currentChatId) return;
     state.currentChatId = chatId;
-    state.history = await fetchHistory(chatId);
-    state.documents = await fetchDocuments(chatId);
+    const history = await fetchHistory(chatId);
+    const documents = await fetchDocuments(chatId);
+    if (state.currentChatId !== chatId) return;
+    state.history = history;
+    state.documents = documents;
     renderSessions();
     renderMessages();
     renderDocuments();
+    updateSendButton();
 }
 
 function newChat() {
@@ -170,6 +180,7 @@ function newChat() {
     renderSessions();
     renderMessages();
     renderDocuments();
+    updateSendButton();
 }
 
 function requestDeleteChat(chatId) {
@@ -184,6 +195,11 @@ function requestDeleteChat(chatId) {
 }
 
 async function finishChatDeletion(chatId) {
+    const controller = state.streaming[chatId];
+    if (controller) {
+        controller.abort();
+        delete state.streaming[chatId];
+    }
     await deleteChatBackend(chatId);
     state.chats = state.chats.filter((id) => id !== chatId);
 
@@ -202,6 +218,7 @@ async function finishChatDeletion(chatId) {
     renderSessions();
     renderMessages();
     renderDocuments();
+    updateSendButton();
 }
 
 async function removeDocument(docHash) {
@@ -241,6 +258,9 @@ async function uploadFiles(files) {
 }
 
 async function sendMessage() {
+    const sendChatId = state.currentChatId;
+    if (state.streaming[sendChatId]) return;
+
     const input = document.getElementById("chat-input");
     const query = input.value.trim();
     if (!query) return;
@@ -248,22 +268,41 @@ async function sendMessage() {
     input.value = "";
     input.style.height = "auto";
 
-    state.history.push({ role: "user", content: query });
-    state.history.push({ role: "assistant", content: "" });
-    renderMessages();
+    const sendHistory = state.history;
+    const controller = new AbortController();
+    state.streaming[sendChatId] = controller;
+    updateSendButton();
 
-    const assistantIndex = state.history.length - 1;
-    const bubbles = document.querySelectorAll(".msg-bubble");
-    const assistantBubble = bubbles[bubbles.length - 1];
-    const cursor = document.createElement("span");
-    cursor.className = "cursor";
-    assistantBubble.appendChild(cursor);
+    sendHistory.push({ role: "user", content: query });
+    sendHistory.push({ role: "assistant", content: "" });
+    const assistantIndex = sendHistory.length - 1;
+    const onScreen = () => state.currentChatId === sendChatId && state.history === sendHistory;
+
+    let cursor = null;
+    if (onScreen()) {
+        renderMessages();
+        const bubbles = document.querySelectorAll(".msg-bubble");
+        cursor = document.createElement("span");
+        cursor.className = "cursor";
+        bubbles[bubbles.length - 1].appendChild(cursor);
+    }
+
+    function paint(text) {
+        if (!onScreen()) return;
+        const bubbles = document.querySelectorAll(".msg-bubble");
+        const bubble = bubbles[bubbles.length - 1];
+        bubble.textContent = text;
+        if (cursor) bubble.appendChild(cursor);
+        const messages = document.getElementById("messages");
+        messages.scrollTop = messages.scrollHeight;
+    }
 
     try {
         const res = await fetch(`${CHAT_URL}/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query, chat_id: state.currentChatId }),
+            body: JSON.stringify({ query, chat_id: sendChatId }),
+            signal: controller.signal,
         });
         if (!res.ok) throw new Error(`status ${res.status}`);
 
@@ -275,16 +314,23 @@ async function sendMessage() {
             const { done, value } = await reader.read();
             if (done) break;
             reply += decoder.decode(value, { stream: true });
-            state.history[assistantIndex].content = reply;
-            assistantBubble.textContent = reply;
-            assistantBubble.appendChild(cursor);
-            document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+            sendHistory[assistantIndex].content = reply;
+            paint(reply);
         }
 
-        cursor.remove();
+        reply += decoder.decode();
+        sendHistory[assistantIndex].content = reply;
+        paint(reply);
+        if (cursor) cursor.remove();
     } catch (e) {
-        state.history[assistantIndex].content = `Chat service unavailable: ${e}`;
-        renderMessages();
+        if (e.name === "AbortError") return;
+        sendHistory[assistantIndex].content = `Chat service unavailable: ${e}`;
+        if (onScreen()) renderMessages();
+    } finally {
+        if (state.streaming[sendChatId] === controller) {
+            delete state.streaming[sendChatId];
+        }
+        updateSendButton();
     }
 }
 

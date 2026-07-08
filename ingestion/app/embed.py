@@ -9,6 +9,7 @@ def get_embedding(text, model="nomic-embed-text"):
     response = requests.post(
         f"{OLLAMA_URL}/api/embeddings",
         json={"model": model, "prompt": text},
+        timeout=(10, 120),
     )
     response.raise_for_status()
 

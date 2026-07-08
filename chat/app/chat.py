@@ -3,7 +3,7 @@ import os
 
 import requests
 
-from memory import add_message, load_history, recent_messages, save_history
+from memory import add_message, history_path, load_history, recent_messages, save_history
 from prompt import build_system_prompt
 from retrieve import retrieve_top_chunks
 
@@ -19,20 +19,21 @@ def ask(query, history, chat_id):
     messages += recent_messages(history)
     messages.append({"role": "user", "content": query})
 
-    response = requests.post(
+    with requests.post(
         f"{OLLAMA_URL}/api/chat",
         json={"model": MODEL, "messages": messages, "stream": True},
         stream=True,
-    )
-    response.raise_for_status()
+        timeout=(10, 120),
+    ) as response:
+        response.raise_for_status()
 
-    for line in response.iter_lines():
-        if not line:
-            continue
-        piece = json.loads(line)
-        yield piece["message"]["content"]
-        if piece.get("done"):
-            break
+        for line in response.iter_lines():
+            if not line:
+                continue
+            piece = json.loads(line)
+            yield piece["message"]["content"]
+            if piece.get("done"):
+                break
 
 
 if __name__ == "__main__":
@@ -41,7 +42,7 @@ if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
 
     chat_id = sys.argv[1]
-    history = load_history()
+    history = load_history(history_path(chat_id))
 
     print("Silo chat. Type 'exit' to quit.")
     while True:
@@ -59,4 +60,4 @@ if __name__ == "__main__":
 
         add_message(history, "user", query)
         add_message(history, "assistant", reply)
-        save_history(history)
+        save_history(history, history_path(chat_id))

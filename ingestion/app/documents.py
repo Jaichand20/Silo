@@ -1,7 +1,10 @@
 import json
 import os
+import threading
 
 DOCUMENTS_DIR = "documents"
+
+_lock = threading.Lock()
 
 
 def documents_path(chat_id):
@@ -16,20 +19,23 @@ def list_documents(chat_id):
         return json.load(f)
 
 
-def add_document(chat_id, doc_hash, filename):
-    documents = list_documents(chat_id)
-    documents.append({"hash": doc_hash, "filename": filename})
-
-    path = documents_path(chat_id)
+def _write_documents(path, documents):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
+    tmp_path = f"{path}.tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(documents, f, indent=2)
+    os.replace(tmp_path, path)
+
+
+def add_document(chat_id, doc_hash, filename):
+    with _lock:
+        documents = list_documents(chat_id)
+        documents.append({"hash": doc_hash, "filename": filename})
+        _write_documents(documents_path(chat_id), documents)
 
 
 def remove_document(chat_id, doc_hash):
-    documents = list_documents(chat_id)
-    documents = [d for d in documents if d["hash"] != doc_hash]
-
-    path = documents_path(chat_id)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(documents, f, indent=2)
+    with _lock:
+        documents = list_documents(chat_id)
+        documents = [d for d in documents if d["hash"] != doc_hash]
+        _write_documents(documents_path(chat_id), documents)

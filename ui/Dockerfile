@@ -3,5 +3,6 @@ FROM python:3.12-slim
 WORKDIR /app
 
 COPY static/ ./static
+COPY server.py ./server.py
 
-CMD ["python", "-m", "http.server", "8501", "--directory", "static"]
+CMD ["python", "server.py"]

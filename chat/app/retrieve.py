@@ -9,22 +9,32 @@ CHROMA_HOST = os.environ.get("CHROMA_HOST", "localhost")
 CHROMA_PORT = int(os.environ.get("CHROMA_PORT", "8000"))
 
 
+_client = None
+
+
+def get_client():
+    global _client
+    if _client is None:
+        _client = chromadb.HttpClient(
+            host=CHROMA_HOST,
+            port=CHROMA_PORT,
+            settings=Settings(anonymized_telemetry=False),
+        )
+    return _client
+
+
 def embed_query(text, model="nomic-embed-text"):
     response = requests.post(
         f"{OLLAMA_URL}/api/embeddings",
         json={"model": model, "prompt": text},
+        timeout=(10, 120),
     )
     response.raise_for_status()
     return response.json()["embedding"]
 
 
 def get_collection(chat_id):
-    client = chromadb.HttpClient(
-        host=CHROMA_HOST,
-        port=CHROMA_PORT,
-        settings=Settings(anonymized_telemetry=False),
-    )
-    return client.get_or_create_collection(f"chat_{chat_id}")
+    return get_client().get_or_create_collection(f"chat_{chat_id}")
 
 
 def retrieve_top_chunks(query, chat_id, top_k=3):
