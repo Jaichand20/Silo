@@ -2,12 +2,20 @@ import os
 import shutil
 
 from fastapi import FastAPI, File, Form, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 
 from dedupe import remove_hash
 from documents import documents_path, list_documents, remove_document
 from store import delete_chat, delete_document, process_document
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8501"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 UPLOAD_DIR = "uploads"
 

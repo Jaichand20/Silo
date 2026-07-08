@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Silo</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="app">
+
+  <div class="topbar">
+    <span class="title">Silo</span>
+    <button class="theme-toggle" id="theme-toggle">Dark</button>
+  </div>
+
+  <div class="body">
+
+    <div class="sidebar">
+      <button class="new-chat-btn" id="new-chat-btn">+ New Chat</button>
+      <div class="sidebar-label">Sessions</div>
+      <div class="sessions" id="sessions"></div>
+    </div>
+
+    <div class="chat-area">
+      <div class="messages" id="messages"></div>
+
+      <div class="chat-input-wrap">
+        <div class="chat-input-box">
+          <textarea id="chat-input" rows="1" placeholder="Ask a question about your documents…"></textarea>
+          <button class="send-btn" id="send-btn">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 11V2M3 5.5l3.5-3.5 3.5 3.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="input-hint">
+          <span>Enter to send</span><span>Shift+Enter for new line</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sources">
+      <div class="sources-header">
+        <span>Sources</span>
+        <span class="doc-count" id="doc-count">0</span>
+      </div>
+
+      <input type="file" accept=".pdf" multiple id="file-input" style="display:none">
+      <div class="upload-zone" id="upload-zone">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="opacity:0.45"><path d="M7.5 2v7.5M5 5l2.5-3 2.5 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 10.5v1a2 2 0 002 2h7a2 2 0 002-2v-1" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg>
+        <div class="upload-zone-text">Drop PDFs here<br><span class="accent">or browse files</span></div>
+      </div>
+
+      <div class="sidebar-label">Documents</div>
+      <div class="doc-list" id="doc-list"></div>
+    </div>
+
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-title" id="modal-title">Delete chat?</div>
+      <p class="modal-body">This removes all documents and conversation history for this session.</p>
+      <label class="modal-checkbox">
+        <input type="checkbox" id="modal-dont-ask">
+        Don't ask me again
+      </label>
+      <div class="modal-actions">
+        <button class="modal-delete" id="modal-confirm">Delete</button>
+        <button class="modal-cancel" id="modal-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
